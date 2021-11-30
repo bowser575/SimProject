@@ -196,7 +196,7 @@ if __name__ == "__main__":
     p = .01
     dayList = np.array([])
     bins = []
-
+    #The Below loop take a bit to run, coment out for faster run times. 
     while(p <.31):
         counter = 0
         print(p)
@@ -210,7 +210,7 @@ if __name__ == "__main__":
 
 
 
-
+    plt.close()
     plt.plot(yaxis, dayList)
     plt.xlabel('Prob')
     plt.ylabel('Avg # days')
