@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
+from collections import Counter
 #created a bernoulli class
  
 class bernoulli():
@@ -158,12 +159,43 @@ def runTrialNoReinfectionMatrix(p,numStudents,matrix,index): #one simulation wit
                 students_sick_tracker[i] -= 1  #Subtract a day from time of being sick
                 if students_sick_tracker[i] == 0:
                     students[i] = 0 # student is healthy
-        matrix[index][dayCounter] = np.count_nonzero(students)
+        matrix[index][dayCounter] = (numStudents - np.count_nonzero(students))
         dayCounter += 1 
 
         if(not np.any(students)): # Check if any student is still sick 
             infected = False
     return dayCounter,matrix
+def runTrialNoReinfectionNormalDistribution(p,numStudents,mean,std): #one simulation w/o reinfection
+    students = np.zeros(numStudents)
+    students[0] = 1 
+    students_sick_tracker = np.zeros(21)
+    has_sick = np.zeros(21)
+    has_sick[0]= True
+    students_sick_tracker[0] = 3
+    dayCounter = 0 
+    infected = True
+    temp_prob =1-p # used to calculate prob for each day below 
+    while(infected):
+        for i in range(0,len(students)):
+            n_zeros = np.count_nonzero(students)
+            #p = 1-((temp_prob) ** n_zeros)
+            s = np.random.normal(mean, std)
+            if(students[i] == 0 ):
+                if np.random.rand() <= s:
+                    if not has_sick[i]:
+                        students_sick_tracker[i] = 3
+                        students[i] = 1
+                        has_sick[i] = True
+            else:
+                students_sick_tracker[i] -= 1  #Subtract a day from time of being sick
+                if students_sick_tracker[i] == 0:
+                    students[i] = 0 # student is healthy
+        #matrix[index][dayCounter] = np.count_nonzero(students)
+        dayCounter += 1 
+
+        if(not np.any(students)): # Check if any student is still sick 
+            infected = False
+    return dayCounter#,matrix
 
 if __name__ == "__main__":
     #rand.seed(1) un comment if you want repeatable results
@@ -171,21 +203,35 @@ if __name__ == "__main__":
     matrix = np.zeros((1000,1000)) 
     counter = 0
     dayList = np.array([])
+
+   
     while(counter < 1000):
         #temp,matrix  = runTrialNoReinfectionMatrix(p,21,matrix,counter) # matrix example
-        temp  = runTrialNoReinfection(p,21)
+        temp  = runTrialNoReinfectionNormalDistribution(p,21,.02,.0065)
         dayList = np.append(dayList, temp)
         counter+=1
 
-    # maxDays = np.max(dayList)
+    maxDays = np.max(dayList)
+    tempdaylist = list(dayList)
     # newmatrix = matrix[:,:int(maxDays)]
     # avergae = newmatrix.mean(axis = 0)
     # np.savetxt("foo.csv", avergae, delimiter=",")
+    a_list = list(range(3, int(maxDays +1)))
+    counterlist  = [0] * int(maxDays+1)
+    mydict = dict((x,tempdaylist.count(x)) for x in set(tempdaylist))
+    for i in range(1,int(maxDays+1)):
+        if i in mydict:
+            counterlist[i] = mydict[i]
+        else:
+           counterlist[i] = 0
+    counterlist = counterlist[3:]
 
-    plt.hist(dayList)
+    plt.style.use('ggplot')
+    plt.bar(a_list,counterlist)
+    plt.title("Normal Distribution - Days for Pandemic to End ")
     plt.xlabel("Days For Pandemic to End")
     plt.ylabel("Number of Trials")
-    plt.savefig("BaseCaseGraph.png")
+    plt.savefig("NormalDistribution.png")
 
     print("mean ", np.mean(dayList))   
     print("median ", np.median(dayList))   
@@ -196,7 +242,7 @@ if __name__ == "__main__":
     p = .01
     dayList = np.array([])
     bins = []
-    #The Below loop take a bit to run, coment out for faster run times. 
+    #The Below loop take a bit to run, comment out for faster run times. 
     while(p <.31):
         counter = 0
         print(p)
@@ -212,6 +258,7 @@ if __name__ == "__main__":
 
     plt.close()
     plt.plot(yaxis, dayList)
+    plt.title("Average # of Days vs Probability")
     plt.xlabel('Prob')
     plt.ylabel('Avg # days')
 
